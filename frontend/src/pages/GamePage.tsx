@@ -12,9 +12,7 @@ interface GamePageProps {
   botsGenerados: boolean;
   cargando: boolean;
   vista: 'club' | 'ranking';
-  layout: 'web' | 'steam' | 'compact';
   onVistaChange: (vista: 'club' | 'ranking') => void;
-  onLayoutChange: (layout: 'web' | 'steam' | 'compact') => void;
   onResponse: (respuesta: ServerResponse<any>) => Promise<void>;
   onRankingChange: (ranking: RankingEntry[]) => void;
   onBotsGenerados: () => void;
@@ -30,9 +28,7 @@ export const GamePage = ({
   botsGenerados,
   cargando,
   vista,
-  layout,
   onVistaChange,
-  onLayoutChange,
   onResponse,
   onRankingChange,
   onBotsGenerados,
@@ -45,6 +41,7 @@ export const GamePage = ({
 
   const equipados = jugador.items.filter((item) => item.estaEquipado);
   const mochila = jugador.items.filter((item) => !item.estaEquipado);
+  const bonusEquipado = equipados.reduce((acc, item) => acc + item.poder, 0);
 
   const ejecutarAccion = async <T = Record<string, never>>(
     accion: () => Promise<ServerResponse<T>>,
@@ -148,8 +145,21 @@ export const GamePage = ({
     </div>
   );
 
+  const renderSlot = (tipo: string, icono: string) => {
+    const pieza = equipados.find((i) => i.tipo === tipo);
+    return (
+      <div className={`gear-slot ${pieza ? '' : 'empty'}`}>
+        <h4>
+          {icono} {tipo}
+        </h4>
+        <div className="gear-item">{pieza ? pieza.nombre : 'Sin equipar'}</div>
+        <span className="detalle">{pieza ? `+${pieza.poder} poder` : 'Equipa algo en este hueco'}</span>
+      </div>
+    );
+  };
+
   return (
-    <div className={`app theme-${layout}`}>
+    <div className="app">
       <nav className="tabs">
         <div className="tab-group">
           <button className={`tab ${vista === 'club' ? 'activo' : ''}`} onClick={() => onVistaChange('club')}>
@@ -159,21 +169,7 @@ export const GamePage = ({
             RANKING
           </button>
         </div>
-        <div className="layout-switcher" aria-label="Cambiar apariencia">
-          {[
-            { id: 'web', label: 'Web' },
-            { id: 'steam', label: 'Steam' },
-            { id: 'compact', label: 'Compacta' },
-          ].map((modo) => (
-            <button
-              key={modo.id}
-              className={`chip ${layout === modo.id ? 'activo' : ''}`}
-              onClick={() => onLayoutChange(modo.id as typeof layout)}
-            >
-              {modo.label}
-            </button>
-          ))}
-        </div>
+        <div className="chip banner">UI desktop pensada para monitor (inspiración Shakes &amp; Fidget)</div>
       </nav>
 
       {vista === 'club' && (
@@ -269,9 +265,14 @@ export const GamePage = ({
                 <h2>Equipo</h2>
                 <span className="detalle">Arrastra tu estilo al nivel Shakes & Fidget</span>
               </div>
-              <div className="equipado-grid">
-                <div className="slot">👟 {equipados.find((i) => i.tipo === 'Botas')?.nombre ?? 'Sin botas equipadas'}</div>
-                <div className="slot">👕 {equipados.find((i) => i.tipo === 'Camiseta')?.nombre ?? 'Sin camiseta equipada'}</div>
+              <div className="gear-board">
+                {renderSlot('Camiseta', '👕')}
+                {renderSlot('Botas', '👟')}
+                <div className="gear-slot">
+                  <h4>Refuerzo total</h4>
+                  <div className="gear-item">+{bonusEquipado} poder</div>
+                  <span className="detalle">Se suma solo lo equipado al cómputo final</span>
+                </div>
               </div>
               {renderInventario(equipados, 'Equipados')}
               {renderInventario(mochila, 'Mochila')}

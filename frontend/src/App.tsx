@@ -12,7 +12,6 @@ function App() {
   const [botsGenerados, setBotsGenerados] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [vista, setVista] = useState<'club' | 'ranking'>('club');
-  const [layout, setLayout] = useState<'web' | 'steam' | 'compact'>('web');
 
   const actualizarDesdeRespuesta = async (respuesta: ServerResponse) => {
     setJugador(respuesta.estado);
@@ -49,9 +48,7 @@ function App() {
       botsGenerados={botsGenerados}
       cargando={cargando}
       vista={vista}
-      layout={layout}
       onVistaChange={setVista}
-      onLayoutChange={setLayout}
       onResponse={actualizarDesdeRespuesta}
       onRankingChange={setRanking}
       onBotsGenerados={() => setBotsGenerados(true)}
