@@ -1,53 +1,67 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Jugador } from './jugador.entity';
 
 @Injectable()
 export class AppService {
-  
-  // Aquí guardamos los datos de tu jugador temporalmente
-  private jugador = {
-    nombre: 'Oliver',
-    fuerza: 10,
-    energia: 100,
-    nivel: 1
-  };
+  constructor(
+    @InjectRepository(Jugador)
+    private jugadorRepo: Repository<Jugador>,
+  ) {}
 
-  getHello(): string {
-    return '¡Bienvenido a SoccerRPG! El servidor está vivo.';
+  // Al iniciar, buscamos si existe el jugador. Si no, lo creamos.
+  async getHello() {
+    return 'Servidor listo.';
   }
 
-  entrenar() {
-    // 1. Si no tiene energía, le avisamos y no entrenamos
-    if (this.jugador.energia < 10) {
-      return {
-        mensaje: "¡Estás agotado! Necesitas descansar.",
-        estado: this.jugador
-      }
+  async obtenerJugador() {
+    // Buscamos al jugador ID 1
+    let jugador = await this.jugadorRepo.findOne({ where: { id: 1 } });
+    
+    // Si es la primera vez que juegas, te creamos
+    if (!jugador) {
+      jugador = this.jugadorRepo.create({ nombre: 'Oliver', fuerza: 10, energia: 100 });
+      await this.jugadorRepo.save(jugador);
     }
+    return jugador;
+  }
 
-    // 2. Gastamos energía
-    this.jugador.energia -= 10;
+  async entrenar() {
+    // 1. Recuperar al jugador de la DB
+    const jugador = await this.obtenerJugador();
 
-    // 3. Tiramos los dados (Suerte)
-    const suerte = Math.random(); // Número entre 0.0 y 1.0
-
-    // Probabilidad de Crítico (Si saca más de 0.8)
-    if (suerte > 0.80) {
-      this.jugador.fuerza += 3;
+    // 2. Validar energía
+    if (jugador.energia < 10) {
       return {
-        mensaje: "¡ENTRENAMIENTO ÉPICO! Has superado tus límites.",
-        resultado: "CRÍTICO",
-        ganancia: "+3 Fuerza",
-        estado: this.jugador
+        mensaje: "¡Estás agotado! Necesitas descansar (o café).",
+        estado: jugador
       };
     }
 
-    // Entrenamiento normal
-    this.jugador.fuerza += 1;
+    // 3. Lógica de juego
+    jugador.energia -= 10;
+    jugador.experiencia += 10; // ¡Ahora ganas XP!
+
+    const suerte = Math.random();
+    let mensaje = "Entrenamiento completado.";
+    let ganancia = "Normal";
+
+    if (suerte > 0.8) {
+      jugador.fuerza += 3;
+      mensaje = "¡CRÍTICO! Te sientes imparable.";
+      ganancia = "Crítico";
+    } else {
+      jugador.fuerza += 1;
+    }
+
+    // 4. GUARDAR EN DISCO DURO (Aquí ocurre la magia)
+    await this.jugadorRepo.save(jugador);
+
     return {
-      mensaje: "Entrenamiento completado.",
-      resultado: "NORMAL",
-      ganancia: "+1 Fuerza",
-      estado: this.jugador
+      mensaje: mensaje,
+      resultado: ganancia,
+      estado: jugador
     };
   }
 }
