@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Jugador } from './jugador.entity';
 import { Item } from './item.entity';
 
-interface ServerResponse<T = Record<string, never>> {
+export interface ServerResponse<T = Record<string, never>> {
   mensaje: string;
   estado: Jugador;
   resultado?: string;
