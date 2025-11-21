@@ -12,7 +12,7 @@ const markRanking = (ranking: Jugador[], jugador?: Jugador): RankingEntry[] =>
   }));
 
 export const JuegoService = {
-  async getProfile(): Promise<ServerResponse> {
+    async getProfile(): Promise<ServerResponse> {
     const { data } = await api.get<ServerResponse>('/jugador');
     return data;
   },
