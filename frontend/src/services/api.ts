@@ -5,59 +5,53 @@ const api = axios.create({
   baseURL: 'http://localhost:3000',
 });
 
-const mapRanking = (ranking: Array<{ nombre: string; fuerzaTotal: number; id: number }>, jugador?: Jugador): RankingEntry[] =>
+const markRanking = (ranking: Jugador[], jugador?: Jugador): RankingEntry[] =>
   ranking.map((entry) => ({
     ...entry,
     esJugador: jugador ? entry.id === jugador.id : false,
   }));
 
 export const JuegoService = {
-  async obtenerJugador(): Promise<ServerResponse> {
+    async getProfile(): Promise<ServerResponse> {
     const { data } = await api.get<ServerResponse>('/jugador');
     return data;
   },
-  async entrenar(): Promise<ServerResponse> {
-    const { data } = await api.post<ServerResponse>('/entrenar');
+  async train(): Promise<ServerResponse> {
+    const { data } = await api.get<ServerResponse>('/entrenar');
     return data;
   },
-  async descansar(): Promise<ServerResponse<{ energiaRecuperada: number }>> {
-    const { data } = await api.post<ServerResponse<{ energiaRecuperada: number }>>('/descansar');
+  async rest(): Promise<ServerResponse> {
+    const { data } = await api.get<ServerResponse>('/descansar');
     return data;
   },
-  async abrirCofre(): Promise<ServerResponse<{ item: Item }>> {
-    const { data } = await api.post<ServerResponse<{ item: Item }>>('/cofre');
+  async openChest(): Promise<ServerResponse<{ item?: Item }>> {
+    const { data } = await api.get<ServerResponse<{ item?: Item }>>('/cofre');
     return data;
   },
-  async jugarLiga(): Promise<ServerResponse<{ recompensa: number; rival: number; resultadoCombate: string }>> {
-    const { data } = await api.post<ServerResponse<{ recompensa: number; rival: number; resultadoCombate: string }>>('/liga');
+  async sellItem(id: number): Promise<ServerResponse<{ oroGanado?: number }>> {
+    const { data } = await api.get<ServerResponse<{ oroGanado?: number }>>(`/items/${id}/vender`);
     return data;
   },
-  async jugarMazmorra(): Promise<ServerResponse<{ recompensa: number; boss: number; resultadoCombate: string; botin?: Item }>> {
-    const { data } = await api.post<
-      ServerResponse<{ recompensa: number; boss: number; resultadoCombate: string; botin?: Item }>
-    >('/mazmorra');
+  async equipItem(id: number, equipar: boolean): Promise<ServerResponse> {
+    const { data } = await api.get<ServerResponse>(`/items/${id}/equipar`, { params: { equipar } });
     return data;
   },
-  async equiparItem(id: number, equipar: boolean): Promise<ServerResponse> {
-    const { data } = await api.patch<ServerResponse>(`/items/${id}/equipar`, { equipar });
+  async playLeague(): Promise<ServerResponse<{ rival?: number }>> {
+    const { data } = await api.get<ServerResponse<{ rival?: number }>>('/liga');
     return data;
   },
-  async venderItem(id: number): Promise<ServerResponse<{ oroGanado: number }>> {
-    const { data } = await api.post<ServerResponse<{ oroGanado: number }>>(`/items/${id}/vender`);
+  async playDungeon(): Promise<ServerResponse<{ boss?: number; botin?: Item }>> {
+    const { data } = await api.get<ServerResponse<{ boss?: number; botin?: Item }>>('/mazmorra');
     return data;
   },
-  async reclamarMision(): Promise<ServerResponse<{ recompensa: number }>> {
-    const { data } = await api.post<ServerResponse<{ recompensa: number }>>('/mision');
-    return data;
+  async getRanking(jugador?: Jugador): Promise<RankingEntry[]> {
+    const { data } = await api.get<ServerResponse<{ ranking: Jugador[] }>>('/ranking');
+    const listado = data.ranking ?? [];
+    return markRanking(listado, jugador ?? data.estado);
   },
-  async obtenerRanking(jugador?: Jugador): Promise<RankingEntry[]> {
-    const { data } = await api.get<{ ranking: Array<{ nombre: string; fuerzaTotal: number; id: number }> }>('/ranking');
-    return mapRanking(data.ranking, jugador);
-  },
-  async generarBots(): Promise<RankingEntry[]> {
-    const { data } = await api.post<{ mensaje: string; ranking: Array<{ nombre: string; fuerzaTotal: number; id: number }> }>(
-      '/ranking/bots',
-    );
-    return mapRanking(data.ranking);
+  async generateBots(jugador?: Jugador): Promise<RankingEntry[]> {
+    const { data } = await api.get<ServerResponse<{ ranking: Jugador[] }>>('/ranking/bots');
+    const listado = data.ranking ?? [];
+    return markRanking(listado, jugador ?? data.estado);
   },
 };

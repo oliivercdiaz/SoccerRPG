@@ -110,6 +110,8 @@ body {
   display: flex; /* Make it a flex container for its children pages */
   flex-direction: column;
   gap: 20px; /* Space between sections */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 

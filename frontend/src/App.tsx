@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import { RankingPage } from './components/RankingPage';
 import { GamePage } from './pages/GamePage';
 import { JuegoService } from './services/api';
-import type { Jugador, RankingEntry, ServerResponse } from './types';
+import type { BattleLog, Jugador, RankingEntry, ServerResponse } from './types';
 
-interface BattleLog {
-  log: string[];
-  resultado: string;
-}
-
-const mapRanking = (entries: RankingEntry[], jugador?: Jugador) =>
-  entries.map((entry) => ({ ...entry, esJugador: jugador ? entry.id === jugador.id : entry.esJugador }));
+const calcularFuerzaTotal = (jugador: Jugador) =>
+  jugador.fuerza + jugador.inventario.filter((i) => i.estaEquipado).reduce((sum, item) => sum + item.bonusFuerza, 0);
 
 function App() {
   const [jugador, setJugador] = useState<Jugador | null>(null);
@@ -22,21 +18,32 @@ function App() {
   const [cargando, setCargando] = useState(false);
   const [vista, setVista] = useState<'club' | 'ranking'>('club');
 
-  const avatarUrl = useMemo(() => `https://robohash.org/${jugador?.nombre ?? 'club'}.png?set=set2`, [jugador?.nombre]);
+  const avatarUrl = useMemo(
+    () => `https://robohash.org/${jugador?.nombre ?? 'club'}.png?set=set2`,
+    [jugador?.nombre],
+  );
 
-  const actualizarDesdeRespuesta = async <T = Record<string, never>>(respuesta: ServerResponse<T>) => {
-    setJugador(respuesta.estado);
-    setFuerzaTotal(respuesta.fuerzaTotal ?? respuesta.estado.fuerzaBase);
+  const refrescarFuerza = (estado: Jugador) => {
+    setJugador(estado);
+    setFuerzaTotal(calcularFuerzaTotal(estado));
+  };
+
+  const actualizarDesdeRespuesta = async (respuesta: ServerResponse<any>) => {
+    refrescarFuerza(respuesta.estado);
     setMensaje(respuesta.mensaje);
-    const rankingData = await JuegoService.obtenerRanking(respuesta.estado);
-    setRanking(mapRanking(rankingData, respuesta.estado));
+  };
+
+  const cargarRanking = async (estado?: Jugador) => {
+    const data = await JuegoService.getRanking(estado ?? jugador ?? undefined);
+    setRanking(data);
   };
 
   const cargarEstadoInicial = async () => {
     setCargando(true);
     try {
-      const data = await JuegoService.obtenerJugador();
+      const data = await JuegoService.getProfile();
       await actualizarDesdeRespuesta(data);
+      await cargarRanking(data.estado);
     } catch (error) {
       setMensaje('❌ Error cargando el vestuario.');
     } finally {
@@ -57,6 +64,7 @@ function App() {
       const respuesta = await accion();
       await actualizarDesdeRespuesta(respuesta);
       onSuccess?.(respuesta);
+      await cargarRanking(respuesta.estado);
     } catch (error) {
       setMensaje('❌ Error conectando con el servidor.');
     } finally {
@@ -66,48 +74,40 @@ function App() {
 
   const acciones = {
     entrenar: () =>
-      ejecutarAccion(() => JuegoService.entrenar(), (resp) => {
-        setBattleLog({ log: [resp.mensaje], resultado: '' });
+      ejecutarAccion(() => JuegoService.train(), (resp) => {
+        setBattleLog({ log: resp.log ?? [resp.mensaje], resultado: resp.resultado ?? '' });
       }),
     descansar: () =>
-      ejecutarAccion(() => JuegoService.descansar(), (resp) => {
-        setBattleLog({ log: [resp.mensaje], resultado: '' });
+      ejecutarAccion(() => JuegoService.rest(), (resp) => {
+        setBattleLog({ log: resp.log ?? [resp.mensaje], resultado: resp.resultado ?? '' });
       }),
     cofre: () =>
-      ejecutarAccion(() => JuegoService.abrirCofre(), (resp) => {
-        const lineas = [resp.mensaje];
-        if ((resp.extra as any)?.item) {
-          lineas.push(`Nuevo: ${(resp.extra as any).item.nombre}`);
-        }
-        setBattleLog({ log: lineas, resultado: '' });
+      ejecutarAccion(() => JuegoService.openChest(), (resp) => {
+        const lineas = resp.log ?? [resp.mensaje];
+        const loot = resp.extra?.item;
+        if (loot) lineas.push(`Nuevo: ${loot.nombre}`);
+        setBattleLog({ log: lineas, resultado: resp.resultado ?? '' });
       }),
     vender: (id: number) =>
-      ejecutarAccion(() => JuegoService.venderItem(id), (resp) => {
-        setBattleLog({ log: [resp.mensaje], resultado: '' });
+      ejecutarAccion(() => JuegoService.sellItem(id), (resp) => {
+        setBattleLog({ log: resp.log ?? [resp.mensaje], resultado: resp.resultado ?? '' });
       }),
     equipar: (id: number) => {
-      if (!jugador) return;
-      const actual = jugador.items.find((i) => i.id === id);
+      const actual = jugador?.inventario.find((i) => i.id === id);
       const equipar = actual ? !actual.estaEquipado : true;
-      return ejecutarAccion(() => JuegoService.equiparItem(id, equipar), (resp) => {
-        setBattleLog({ log: [resp.mensaje], resultado: '' });
+      return ejecutarAccion(() => JuegoService.equipItem(id, equipar), (resp) => {
+        setBattleLog({ log: resp.log ?? [resp.mensaje], resultado: resp.resultado ?? '' });
       });
     },
     combatir: () =>
-      ejecutarAccion(() => JuegoService.jugarLiga(), (resp) => {
-        const resultado = (resp.extra as any)?.resultadoCombate ?? '';
-        const lineas = [resp.mensaje, resultado ? `Resultado: ${resultado}` : ''].filter(Boolean);
-        setBattleLog({ log: lineas, resultado });
+      ejecutarAccion(() => JuegoService.playLeague(), (resp) => {
+        setBattleLog({ log: resp.log ?? [resp.mensaje], resultado: resp.resultado ?? '' });
       }),
     boss: () =>
-      ejecutarAccion(() => JuegoService.jugarMazmorra(), (resp) => {
-        const resultado = (resp.extra as any)?.resultadoCombate ?? '';
-        const botin = (resp.extra as any)?.botin;
-        const lineas = [resp.mensaje, resultado ? `Resultado: ${resultado}` : ''];
-        if (botin) {
-          lineas.push(`Botín: ${botin.nombre}`);
-        }
-        setBattleLog({ log: lineas.filter(Boolean), resultado });
+      ejecutarAccion(() => JuegoService.playDungeon(), (resp) => {
+        const lineas = resp.log ?? [resp.mensaje];
+        if (resp.extra?.botin) lineas.push(`Botín: ${resp.extra.botin.nombre}`);
+        setBattleLog({ log: lineas, resultado: resp.resultado ?? '' });
       }),
     ranking: () => setVista('ranking'),
   };
@@ -115,9 +115,8 @@ function App() {
   const generarBots = async () => {
     setCargando(true);
     try {
-      const data = await JuegoService.generarBots();
-      const rankingMarcado = mapRanking(data, jugador ?? undefined);
-      setRanking(rankingMarcado);
+      const data = await JuegoService.generateBots(jugador ?? undefined);
+      setRanking(data);
       setBotsGenerados(true);
       setMensaje('Bots generados');
     } catch (error) {
@@ -166,26 +165,13 @@ function App() {
         )}
 
         {vista === 'ranking' && (
-          <div className="ranking-container game-content-area">
-            <div className="ranking-title">Ranking</div>
-            {!botsGenerados && (
-              <button className="btn btn-purple" onClick={generarBots} disabled={cargando}>
-                Generar bots
-              </button>
-            )}
-            <div className="ranking-list">
-              {ranking.map((entry, idx) => (
-                <div
-                  key={entry.id}
-                  className={`ranking-item ${entry.esJugador ? 'player-highlight' : ''}`}
-                >
-                  <div className="ranking-position">#{idx + 1}</div>
-                  <div className="ranking-name">{entry.nombre}</div>
-                  <div className="ranking-force">{entry.fuerzaTotal}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <RankingPage
+            ranking={ranking}
+            jugador={jugador}
+            botsGenerados={botsGenerados}
+            cargando={cargando}
+            onGenerateBots={generarBots}
+          />
         )}
       </div>
     </div>

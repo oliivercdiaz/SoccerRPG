@@ -1,11 +1,11 @@
 import { ItemCard } from '../components/ItemCard';
-import type { Jugador } from '../types';
+import type { BattleLog, Jugador } from '../types';
 
 interface GamePageProps {
   jugador: Jugador;
   fuerzaTotal: number;
   mensaje: string;
-  battleLog: { log: string[]; resultado: string };
+  battleLog: BattleLog;
   acciones: {
     entrenar: () => void;
     descansar: () => void;
@@ -20,10 +20,11 @@ interface GamePageProps {
 
 export const GamePage = ({ jugador, fuerzaTotal, mensaje, battleLog, acciones }: GamePageProps) => {
   const energiaPct = Math.min(100, Math.max(0, jugador.energia));
-  const xpPct = Math.min(100, jugador.experiencia % 100);
+  const experiencia = jugador.experiencia ?? 0;
+  const xpPct = Math.min(100, Math.max(0, experiencia % 100));
 
-  const equipados = jugador.items.filter((item) => item.estaEquipado);
-  const mochila = jugador.items.filter((item) => !item.estaEquipado);
+  const equipados = jugador.inventario.filter((item) => item.estaEquipado);
+  const mochila = jugador.inventario.filter((item) => !item.estaEquipado);
 
   return (
     <div className="game-content-area">
@@ -31,7 +32,7 @@ export const GamePage = ({ jugador, fuerzaTotal, mensaje, battleLog, acciones }:
         <div className="stat-card">
           <div className="stat-label">FUERZA TOTAL</div>
           <div className="stat-value val-red">{fuerzaTotal}</div>
-          <div className="stat-label">Base: {jugador.fuerzaBase} | Equipo: {fuerzaTotal - jugador.fuerzaBase}</div>
+          <div className="stat-label">Base: {jugador.fuerza}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">ENERGÍA</div>
@@ -42,7 +43,7 @@ export const GamePage = ({ jugador, fuerzaTotal, mensaje, battleLog, acciones }:
         </div>
         <div className="stat-card">
           <div className="stat-label">EXPERIENCIA</div>
-          <div className="stat-value">{jugador.experiencia} XP</div>
+          <div className="stat-value">{experiencia} XP</div>
           <div className="progress-bg">
             <div className="progress-fill xp" style={{ width: `${xpPct}%` }}></div>
           </div>
@@ -91,13 +92,7 @@ export const GamePage = ({ jugador, fuerzaTotal, mensaje, battleLog, acciones }:
         <div className="inventory-grid">
           {equipados.length === 0 && <div className="stat-label">No hay objetos equipados.</div>}
           {equipados.map((item) => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              onEquipar={acciones.equipar}
-              onDesequipar={acciones.equipar}
-              onVender={acciones.vender}
-            />
+            <ItemCard key={item.id} item={item} onEquipar={acciones.equipar} isEquipped onVender={acciones.vender} />
           ))}
         </div>
 
@@ -109,8 +104,8 @@ export const GamePage = ({ jugador, fuerzaTotal, mensaje, battleLog, acciones }:
               key={item.id}
               item={item}
               onEquipar={acciones.equipar}
-              onDesequipar={acciones.equipar}
               onVender={acciones.vender}
+              isEquipped={false}
             />
           ))}
         </div>

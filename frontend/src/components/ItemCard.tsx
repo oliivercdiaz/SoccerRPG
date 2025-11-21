@@ -1,49 +1,40 @@
 import type { Item } from '../types';
 
-interface Props {
+interface ItemCardProps {
   item: Item;
   onEquipar: (id: number) => void;
-  onDesequipar: (id: number) => void;
-  onVender: (id: number) => void;
+  onVender?: (id: number) => void;
+  isEquipped: boolean;
 }
 
-const iconMap: Record<string, string> = {
-  Botas: 'https://cdn.jsdelivr.net/gh/game-icons/icons@1.4.0/svg/boots.svg',
-  Camiseta: 'https://cdn.jsdelivr.net/gh/game-icons/icons@1.4.0/svg/shoulder-armor.svg',
-  Espada: 'https://cdn.jsdelivr.net/gh/game-icons/icons@1.4.0/svg/plain-dagger.svg',
-  Guantes: 'https://cdn.jsdelivr.net/gh/game-icons/icons@1.4.0/svg/hand.svg',
+const rarityClass = (rareza: string) => {
+  const normalized = rareza.toLowerCase();
+  if (normalized.includes('legend')) return 'rare-legendary';
+  if (normalized.includes('unique') || normalized.includes('épico')) return 'rare-unique';
+  if (normalized.includes('rare') || normalized.includes('raro')) return 'rare-rare';
+  return 'rare-common';
 };
 
-export const ItemCard = ({ item, onEquipar, onDesequipar, onVender }: Props) => {
-  const icon = iconMap[item.tipo] ?? iconMap.Espada;
-
+export const ItemCard = ({ item, onEquipar, onVender, isEquipped }: ItemCardProps) => {
   return (
-    <div className={`item-card rarity-${item.rareza}`}>
-      <div className="item-card__left">
-        <div className="item-avatar">
-          <img src={icon} alt={item.nombre} />
-        </div>
-        <div className="item-info">
-          <div className="item-title">{item.nombre}</div>
-          <div className="item-meta">
-            {item.tipo} • Poder +{item.poder} • {item.rareza.toUpperCase()}
-          </div>
-          {item.estaEquipado && <span className="pill equipped">Equipado</span>}
-        </div>
+    <div className={`item-card ${rarityClass(item.rareza)}`}>
+      <div className="item-icon">
+        <img
+          src={`https://raw.githubusercontent.com/ncform/ncform.github.io/master/img/item-${item.tipo.toLowerCase()}.png`}
+          alt={item.nombre}
+          className="item-img"
+        />
       </div>
-      <div className="item-actions">
-        {!item.estaEquipado && (
-          <button className="btn ghost" onClick={() => onEquipar(item.id)}>
-            ⬆️ Equipar
+      <div className="item-name">{item.nombre}</div>
+      <div className="item-stats">+{item.bonusFuerza} fuerza</div>
+      <div className="actions-grid">
+        {!isEquipped && onVender && (
+          <button className="btn btn-gold" onClick={() => onVender(item.id)}>
+            $ Vender
           </button>
         )}
-        {item.estaEquipado && (
-          <button className="btn warning" onClick={() => onDesequipar(item.id)}>
-            ⬇️ Desequipar
-          </button>
-        )}
-        <button className="btn danger" onClick={() => onVender(item.id)}>
-          💰 Vender
+        <button className="btn btn-blue" onClick={() => onEquipar(item.id)}>
+          {isEquipped ? '⬇️ Desequipar' : '⬆️ Equipar'}
         </button>
       </div>
     </div>

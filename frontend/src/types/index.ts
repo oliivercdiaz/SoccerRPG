@@ -1,39 +1,38 @@
 export interface Item {
   id: number;
   nombre: string;
-  tipo: string;
-  poder: number;
-  valor: number;
   rareza: string;
+  tipo: string;
+  bonusFuerza: number;
   estaEquipado: boolean;
 }
 
 export interface Jugador {
   id: number;
   nombre: string;
-  fuerzaBase: number;
+  fuerza: number;
   energia: number;
-  experiencia: number;
-  nivel: number;
   oro: number;
-  cofres_abiertos_desde_legendario: number;
-  entrenos_hoy: number;
-  entrenos_fecha: string;
-  ultima_mision: string;
-  items: Item[];
+  nivel: number;
+  inventario: Item[];
+  experiencia?: number;
+}
+
+export interface BattleLog {
+  log: string[];
+  resultado: string;
 }
 
 export interface ServerResponse<T = Record<string, never>> {
   mensaje: string;
-  resultado?: string;
   estado: Jugador;
-  fuerzaTotal?: number;
+  log?: string[];
+  resultado?: string;
+  ranking?: Jugador[];
   extra?: T;
 }
 
-export interface RankingEntry {
-  id: number;
-  nombre: string;
-  fuerzaTotal: number;
+export interface RankingEntry extends Jugador {
+  fuerzaTotal?: number;
   esJugador?: boolean;
 }
