@@ -20,9 +20,24 @@ export class AppController {
     return this.appService.entrenar();
   }
 
+  @Post('descansar')
+  descansar() {
+    return this.appService.descansar();
+  }
+
   @Post('cofre')
   abrirCofre() {
     return this.appService.abrirCofre();
+  }
+
+  @Post('liga')
+  jugarLiga() {
+    return this.appService.jugarLiga();
+  }
+
+  @Post('mazmorra')
+  jugarMazmorra() {
+    return this.appService.jugarMazmorra();
   }
 
   @Patch('items/:id/equipar')

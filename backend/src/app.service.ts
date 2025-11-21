@@ -140,6 +140,131 @@ export class AppService {
     };
   }
 
+  async descansar(): Promise<ServerResponse<{ energiaRecuperada: number }>> {
+    const jugador = await this.obtenerJugador();
+
+    if (jugador.energia >= 100) {
+      return {
+        mensaje: 'Ya estás al máximo. ¡Listo para la acción!',
+        estado: jugador,
+        fuerzaTotal: this.calcularFuerzaTotal(jugador),
+        extra: { energiaRecuperada: 0 },
+      };
+    }
+
+    const energiaRecuperada = Math.min(30, 100 - jugador.energia);
+    jugador.energia += energiaRecuperada;
+    await this.jugadorRepo.save(jugador);
+
+    return {
+      mensaje: 'Un descanso reparador te devuelve la chispa.',
+      estado: jugador,
+      fuerzaTotal: this.calcularFuerzaTotal(jugador),
+      extra: { energiaRecuperada },
+    };
+  }
+
+  async jugarLiga(): Promise<ServerResponse<{ recompensa: number; rival: number; resultadoCombate: 'Victoria' | 'Derrota' }>> {
+    const jugador = await this.obtenerJugador();
+
+    if (jugador.energia < 15) {
+      return {
+        mensaje: 'Te falta energía para competir en liga.',
+        estado: jugador,
+        fuerzaTotal: this.calcularFuerzaTotal(jugador),
+        extra: { recompensa: 0, rival: 0, resultadoCombate: 'Derrota' },
+      };
+    }
+
+    jugador.energia -= 15;
+
+    const fuerzaJugador = this.calcularFuerzaTotal(jugador);
+    const rival = Math.max(12, Math.floor(fuerzaJugador * 0.85 + Math.random() * fuerzaJugador * 0.6));
+    const tirada = Math.random();
+    const modificadorJugador = 0.9 + Math.random() * 0.3;
+    const victoria = fuerzaJugador * modificadorJugador >= rival || tirada > 0.55;
+
+    let mensaje = 'La liga fue dura, toca volver al entrenamiento.';
+    let recompensa = 0;
+    let resultadoCombate: 'Victoria' | 'Derrota' = 'Derrota';
+
+    if (victoria) {
+      recompensa = 25 + Math.floor(Math.random() * 20);
+      jugador.oro += recompensa;
+      jugador.experiencia += 20;
+      resultadoCombate = 'Victoria';
+      mensaje = '¡Victoria en la liga! Los rivales temen tu tiki-taka.';
+    } else {
+      jugador.experiencia += 8;
+    }
+
+    await this.jugadorRepo.save(jugador);
+
+    return {
+      mensaje,
+      resultado: resultadoCombate,
+      estado: jugador,
+      fuerzaTotal: this.calcularFuerzaTotal(jugador),
+      extra: { recompensa, rival, resultadoCombate },
+    };
+  }
+
+  async jugarMazmorra(): Promise<
+    ServerResponse<{ recompensa: number; boss: number; resultadoCombate: 'Victoria' | 'Derrota'; botin?: Item }>
+  > {
+    const jugador = await this.obtenerJugador();
+
+    if (jugador.energia < 25) {
+      return {
+        mensaje: 'Necesitas más energía para enfrentar la mazmorra.',
+        estado: jugador,
+        fuerzaTotal: this.calcularFuerzaTotal(jugador),
+        extra: { recompensa: 0, boss: 0, resultadoCombate: 'Derrota' },
+      };
+    }
+
+    jugador.energia -= 25;
+
+    const fuerzaJugador = this.calcularFuerzaTotal(jugador);
+    const boss = Math.floor(fuerzaJugador * 1.1 + 25);
+    const suerte = Math.random();
+    const modificadorJugador = 0.95 + Math.random() * 0.35;
+    const victoria = fuerzaJugador * modificadorJugador >= boss || suerte > 0.65;
+
+    let mensaje = 'El boss te aplastó, toca reagruparse.';
+    let recompensa = 0;
+    let botin: Item | undefined;
+    let resultadoCombate: 'Victoria' | 'Derrota' = 'Derrota';
+
+    if (victoria) {
+      recompensa = 55 + Math.floor(Math.random() * 30);
+      jugador.oro += recompensa;
+      jugador.experiencia += 35;
+      resultadoCombate = 'Victoria';
+      mensaje = '¡Has domado al Kraken de la mazmorra!';
+
+      const rareza = suerte > 0.9 ? 'legendario' : suerte > 0.6 ? 'raro' : 'comun';
+      botin = this.generarItemAleatorio(jugador, rareza);
+      botin.estaEquipado = false;
+      await this.itemRepo.save(botin);
+      jugador.items.push(botin);
+    } else {
+      jugador.experiencia += 12;
+    }
+
+    await this.jugadorRepo.save(jugador);
+
+    const actualizado = await this.jugadorRepo.findOne({ where: { id: jugador.id }, relations: ['items'] });
+
+    return {
+      mensaje,
+      resultado: resultadoCombate,
+      estado: actualizado!,
+      fuerzaTotal: this.calcularFuerzaTotal(actualizado!),
+      extra: { recompensa, boss, resultadoCombate, botin },
+    };
+  }
+
   async equiparItem(itemId: number, equipar: boolean): Promise<ServerResponse> {
     const item = await this.itemRepo.findOne({
       where: { id: itemId },

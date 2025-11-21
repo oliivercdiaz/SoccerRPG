@@ -65,10 +65,30 @@ export const GamePage = ({
       }
     });
 
+  const descansar = () => ejecutarAccion(() => JuegoService.descansar());
+
   const abrirCofre = () =>
     ejecutarAccion(async () => JuegoService.abrirCofre(), (respuesta) => {
       if (respuesta.resultado === 'legendario') {
         AudioService.success();
+      }
+    });
+
+  const jugarLiga = () =>
+    ejecutarAccion(async () => JuegoService.jugarLiga(), (respuesta) => {
+      if (respuesta.extra?.resultadoCombate === 'Victoria') {
+        AudioService.success();
+      } else {
+        AudioService.defeat();
+      }
+    });
+
+  const jugarMazmorra = () =>
+    ejecutarAccion(async () => JuegoService.jugarMazmorra(), (respuesta) => {
+      if (respuesta.extra?.resultadoCombate === 'Victoria') {
+        AudioService.success();
+      } else {
+        AudioService.defeat();
       }
     });
 
@@ -168,8 +188,17 @@ export const GamePage = ({
               <button className="btn" onClick={entrenar} disabled={jugador.energia < 10 || cargando}>
                 🏋️ Entrenar
               </button>
+              <button className="btn" onClick={descansar} disabled={jugador.energia >= 100 || cargando}>
+                💤 Descansar (+energía)
+              </button>
               <button className="btn" onClick={abrirCofre} disabled={cargando}>
                 🗝️ Abrir cofre
+              </button>
+              <button className="btn" onClick={jugarLiga} disabled={jugador.energia < 15 || cargando}>
+                🏆 Jugar liga (-15⚡)
+              </button>
+              <button className="btn" onClick={jugarMazmorra} disabled={jugador.energia < 25 || cargando}>
+                🐉 Mazmorra (-25⚡)
               </button>
               <button className="btn" onClick={reclamarMision} disabled={cargando}>
                 📜 Misión diaria ({jugador.entrenos_hoy}/5)

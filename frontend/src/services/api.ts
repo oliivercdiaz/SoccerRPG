@@ -20,8 +20,22 @@ export const JuegoService = {
     const { data } = await api.post<ServerResponse>('/entrenar');
     return data;
   },
+  async descansar(): Promise<ServerResponse<{ energiaRecuperada: number }>> {
+    const { data } = await api.post<ServerResponse<{ energiaRecuperada: number }>>('/descansar');
+    return data;
+  },
   async abrirCofre(): Promise<ServerResponse<{ item: Item }>> {
     const { data } = await api.post<ServerResponse<{ item: Item }>>('/cofre');
+    return data;
+  },
+  async jugarLiga(): Promise<ServerResponse<{ recompensa: number; rival: number; resultadoCombate: string }>> {
+    const { data } = await api.post<ServerResponse<{ recompensa: number; rival: number; resultadoCombate: string }>>('/liga');
+    return data;
+  },
+  async jugarMazmorra(): Promise<ServerResponse<{ recompensa: number; boss: number; resultadoCombate: string; botin?: Item }>> {
+    const { data } = await api.post<
+      ServerResponse<{ recompensa: number; boss: number; resultadoCombate: string; botin?: Item }>
+    >('/mazmorra');
     return data;
   },
   async equiparItem(id: number, equipar: boolean): Promise<ServerResponse> {
