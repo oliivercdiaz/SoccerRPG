@@ -16,7 +16,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: min(1600px, 96vw);
+  width: min(1400px, 100%);
   margin: 0 auto;
 }
 
@@ -85,9 +85,31 @@ body {
 
 .hero {
   display: grid;
-  grid-template-columns: 200px 1fr 320px;
-  gap: 20px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.hero.full {
+  grid-template-columns: 220px 1fr 280px;
+}
+
+.hero-left {
+  display: flex;
+  gap: 12px;
   align-items: center;
+}
+
+.hero-center {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
 }
 
 .loot-panel {
@@ -120,10 +142,11 @@ body {
   font-weight: bold;
 }
 
-.stats {
+.nivel-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  align-items: flex-start;
 }
 
 .stat-row {
@@ -236,11 +259,20 @@ body {
   font-size: 16px;
 }
 
+.mensaje.grande {
+  font-size: 18px;
+  padding: 14px;
+}
+
 .gear-board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
+}
+
+.gear-board.compact {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .gear-slot {
@@ -282,7 +314,7 @@ body {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1fr;
   gap: 20px;
   align-items: start;
 }
@@ -300,6 +332,12 @@ body {
   grid-template-columns: 1fr 100px;
   padding: 10px 12px;
   align-items: center;
+}
+
+.tabla.grande .tabla-header,
+.tabla.grande .tabla-row {
+  grid-template-columns: 1fr 140px;
+  padding: 12px 14px;
 }
 
 .tabla-header {
@@ -324,6 +362,10 @@ body {
   gap: 16px;
 }
 
+.action-grid.single {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
 .action-stack {
   display: flex;
   flex-direction: column;
@@ -338,6 +380,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.mission-card.wide {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .mission-title {

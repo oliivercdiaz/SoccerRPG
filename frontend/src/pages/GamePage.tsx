@@ -111,11 +111,11 @@ export const GamePage = ({
     AudioService.click();
     try {
       const rankingData = await JuegoService.generarBots();
-      onBotsGenerados();
       const jugadorActual = await JuegoService.obtenerJugador();
       await onResponse(jugadorActual);
       const rankingMarcado = rankingData.map((entry) => ({ ...entry, esJugador: entry.id === jugadorActual.estado.id }));
       onRankingChange(rankingMarcado);
+      onBotsGenerados();
     } catch (error) {
       onErrorMessage('No se pudieron generar bots.');
       AudioService.defeat();
@@ -124,43 +124,52 @@ export const GamePage = ({
     }
   };
 
-  const renderInventario = (items: Item[], titulo: string) => (
-    <div className="items-section">
-      <h3>{titulo}</h3>
-      {items.length === 0 ? (
-        <div className="empty">Vacío</div>
-      ) : (
-        <div className="items-list">
-          {items.map((item) => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              onEquipar={(id) => equiparItem(id, true)}
-              onDesequipar={(id) => equiparItem(id, false)}
-              onVender={venderItem}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
   const renderSlot = (tipo: string, icono: string) => {
-    const pieza = equipados.find((i) => i.tipo === tipo);
+    const item = equipados.find((i) => i.tipo === tipo);
     return (
-      <div className={`gear-slot ${pieza ? '' : 'empty'}`}>
-        <h4>
-          {icono} {tipo}
-        </h4>
-        <div className="gear-item">{pieza ? pieza.nombre : 'Sin equipar'}</div>
-        <span className="detalle">{pieza ? `+${pieza.poder} poder` : 'Equipa algo en este hueco'}</span>
+      <div className="gear-slot">
+        <h4>{icono} {tipo}</h4>
+        {item ? (
+          <div className="gear-item">
+            <div>
+              <div className="item-title">{item.nombre}</div>
+              <div className="item-meta">+{item.poder} poder • {item.rareza}</div>
+            </div>
+            <button className="btn ghost" onClick={() => equiparItem(item.id, false)}>
+              ⬇️ Desequipar
+            </button>
+          </div>
+        ) : (
+          <div className="gear-item empty">Vacío</div>
+        )}
       </div>
     );
   };
 
+  const renderInventario = (items: Item[], titulo: string) => (
+    <div className="inventario">
+      <div className="section-header">
+        <h3>{titulo}</h3>
+        <span className="detalle">{items.length} objetos</span>
+      </div>
+      <div className="inventario-grid">
+        {items.length === 0 && <p className="detalle">Sin objetos aquí.</p>}
+        {items.map((item) => (
+          <ItemCard
+            key={item.id}
+            item={item}
+            onEquipar={(id) => equiparItem(id, true)}
+            onDesequipar={(id) => equiparItem(id, false)}
+            onVender={venderItem}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="app">
-      <nav className="tabs">
+      <header className="tabs">
         <div className="tab-group">
           <button className={`tab ${vista === 'club' ? 'activo' : ''}`} onClick={() => onVistaChange('club')}>
             MI CLUB
@@ -169,44 +178,59 @@ export const GamePage = ({
             RANKING
           </button>
         </div>
-        <div className="chip banner">UI desktop pensada para monitor (inspiración Shakes &amp; Fidget)</div>
-      </nav>
+        <div className="chip banner">La potencia proviene de lo equipado, estilo Shakes & Fidget.</div>
+      </header>
 
       {vista === 'club' && (
         <>
-          <header className="panel hero">
-            <div className="avatar-block">
-              <img className="avatar" src={avatarUrl} alt="Avatar" />
-              <div className="nivel">Nivel {jugador.nivel}</div>
-              <div className="pill ghost">{jugador.nombre}</div>
+          <section className="panel hero full">
+            <div className="hero-left">
+              <img className="avatar" src={avatarUrl} alt={jugador.nombre} />
+              <div className="nivel-card">
+                <span className="nivel">Nivel {jugador.nivel}</span>
+                <span className="detalle">{jugador.nombre}</span>
+              </div>
             </div>
-            <div className="stats">
+            <div className="hero-center">
               <div className="stat-row">
-                <span>💪 Fuerza total</span>
+                <span className="detalle">Fuerza total</span>
+                <div className="barra">
+                  <div className="barra-xp" style={{ width: `${Math.min(100, (fuerzaTotal / Math.max(100, fuerzaTotal)) * 100)}%` }}></div>
+                </div>
                 <strong>{fuerzaTotal}</strong>
-                <span className="detalle">Base {jugador.fuerzaBase}</span>
               </div>
               <div className="stat-row">
-                <span>⚡ Energía</span>
+                <span className="detalle">Energía</span>
                 <div className="barra">
                   <div className="barra-energia" style={{ width: `${energiaPct}%` }}></div>
                 </div>
-                <span className="detalle">{jugador.energia} / 100</span>
+                <strong>{jugador.energia}/100</strong>
               </div>
               <div className="stat-row">
-                <span>🎖️ XP</span>
+                <span className="detalle">Experiencia</span>
                 <div className="barra">
                   <div className="barra-xp" style={{ width: `${xpPct}%` }}></div>
                 </div>
-                <span className="detalle">{jugador.experiencia} xp</span>
+                <strong>{jugador.experiencia} xp</strong>
+              </div>
+              <div className="chip-group">
+                <span className="chip">Oro: {jugador.oro}💰</span>
+                <span className="chip">Pity: {jugador.cofres_abiertos_desde_legendario} cofres</span>
+                <span className="chip banner">+{bonusEquipado} poder equipado</span>
               </div>
             </div>
-            <div className="loot-panel">
-              <div className="pill gold">💰 Oro {jugador.oro}</div>
-              <div className="pill ghost">Cofres sin legendario: {jugador.cofres_abiertos_desde_legendario}</div>
-              <div className="pill ghost">Entrenos de hoy: {jugador.entrenos_hoy}/5</div>
+            <div className="hero-right">
+              <div className="panel info-card">
+                <p className="detalle">"{mensaje}"</p>
+                <p className="detalle">Mantén energía alta para cadena de victorias.</p>
+              </div>
+              {!botsGenerados && (
+                <button className="btn tertiary full" onClick={generarBots} disabled={cargando}>
+                  GENERAR BOTS
+                </button>
+              )}
             </div>
-          </header>
+          </section>
 
           <section className="panel action-panel">
             <div className="action-header">
@@ -219,7 +243,7 @@ export const GamePage = ({
                 <span className="chip subtle">⚔️ PvE/PvP listos</span>
               </div>
             </div>
-            <div className="action-grid">
+            <div className="action-grid single">
               <div className="action-stack">
                 <button className="btn" onClick={entrenar} disabled={jugador.energia < 10 || cargando}>
                   🏋️ Entrenar (+xp)
@@ -242,63 +266,61 @@ export const GamePage = ({
                   📜 Misión diaria ({jugador.entrenos_hoy}/5)
                 </button>
               </div>
-              <div className="mission-card">
-                <div>
-                  <p className="mission-title">Misión de hoy</p>
-                  <p>Entrena 5 veces y reclama tu botín diario.</p>
+            </div>
+            <div className="mission-card wide">
+              <div>
+                <p className="mission-title">Misión de hoy</p>
+                <p>Entrena 5 veces y reclama tu botín diario.</p>
+              </div>
+              <div className="mission-progress">
+                <div className="barra">
+                  <div className="barra-xp" style={{ width: `${Math.min(100, (jugador.entrenos_hoy / 5) * 100)}%` }}></div>
                 </div>
-                <div className="mission-progress">
-                  <div className="barra">
-                    <div className="barra-xp" style={{ width: `${Math.min(100, (jugador.entrenos_hoy / 5) * 100)}%` }}></div>
-                  </div>
-                  <span className="detalle">{jugador.entrenos_hoy} / 5 sesiones</span>
-                </div>
+                <span className="detalle">{jugador.entrenos_hoy} / 5 sesiones</span>
               </div>
             </div>
           </section>
 
-          <section className="panel mensaje">"{mensaje}"</section>
+          <section className="panel mensaje grande">"{mensaje}"</section>
 
-          <section className="dashboard-grid">
-            <div className="panel">
-              <div className="section-header">
-                <h2>Equipo</h2>
-                <span className="detalle">Arrastra tu estilo al nivel Shakes & Fidget</span>
-              </div>
-              <div className="gear-board">
-                {renderSlot('Camiseta', '👕')}
-                {renderSlot('Botas', '👟')}
-                <div className="gear-slot">
-                  <h4>Refuerzo total</h4>
-                  <div className="gear-item">+{bonusEquipado} poder</div>
-                  <span className="detalle">Se suma solo lo equipado al cómputo final</span>
-                </div>
-              </div>
-              {renderInventario(equipados, 'Equipados')}
-              {renderInventario(mochila, 'Mochila')}
+          <section className="panel equipo-panel">
+            <div className="section-header">
+              <h2>Equipo & Inventario</h2>
+              <span className="detalle">Solo cuenta lo equipado. Arriba los slots, abajo la mochila.</span>
             </div>
+            <div className="gear-board compact">
+              {renderSlot('Camiseta', '👕')}
+              {renderSlot('Botas', '👟')}
+              <div className="gear-slot">
+                <h4>Refuerzo total</h4>
+                <div className="gear-item">+{bonusEquipado} poder</div>
+                <span className="detalle">Se suma solo lo equipado al cómputo final</span>
+              </div>
+            </div>
+            {renderInventario(equipados, 'Equipados')}
+            {renderInventario(mochila, 'Mochila')}
+          </section>
 
-            <div className="panel ranking-panel">
-              <div className="section-header">
-                <h2>Ranking</h2>
-                {!botsGenerados && (
-                  <button className="btn tertiary" onClick={generarBots} disabled={cargando}>
-                    GENERAR BOTS
-                  </button>
-                )}
+          <section className="panel ranking-panel full-width">
+            <div className="section-header">
+              <h2>Ranking</h2>
+              {!botsGenerados && (
+                <button className="btn tertiary" onClick={generarBots} disabled={cargando}>
+                  GENERAR BOTS
+                </button>
+              )}
+            </div>
+            <div className="tabla grande">
+              <div className="tabla-header">
+                <span>Nombre</span>
+                <span>Fuerza</span>
               </div>
-              <div className="tabla">
-                <div className="tabla-header">
-                  <span>Nombre</span>
-                  <span>Fuerza</span>
+              {ranking.map((r) => (
+                <div key={r.id} className={`tabla-row ${r.esJugador ? 'activo' : ''}`}>
+                  <span>{r.nombre}</span>
+                  <span>{r.fuerzaTotal}</span>
                 </div>
-                {ranking.map((r) => (
-                  <div key={r.id} className={`tabla-row ${r.esJugador ? 'activo' : ''}`}>
-                    <span>{r.nombre}</span>
-                    <span>{r.fuerzaTotal}</span>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </section>
         </>
@@ -317,7 +339,7 @@ export const GamePage = ({
               </button>
             )}
           </header>
-          <div className="tabla">
+          <div className="tabla grande">
             <div className="tabla-header">
               <span>Nombre</span>
               <span>Fuerza</span>
