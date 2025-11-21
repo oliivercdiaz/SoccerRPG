@@ -3,16 +3,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Jugador } from './jugador.entity';
+import { Item } from './item.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: 'juego.sqlite', // Aquí se guardarán los datos
-      entities: [Jugador],
-      synchronize: true, // ¡Crea las tablas automáticamente!
+      database: 'juego.sqlite',
+      entities: [Jugador, Item],
+      synchronize: true,
     }),
-    TypeOrmModule.forFeature([Jugador]),
+    TypeOrmModule.forFeature([Jugador, Item]),
   ],
   controllers: [AppController],
   providers: [AppService],
