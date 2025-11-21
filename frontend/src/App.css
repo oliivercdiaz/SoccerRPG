@@ -1,42 +1,408 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* -- BASE STYLES -- */
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  background-color: #0d1117; /* Dark background */
+  color: #c9d1d9; /* Light grey text */
+  display: flex; /* Use flex to ensure full height */
+  min-height: 100vh; /* Full viewport height */
+  justify-content: center; /* Center content */
+  align-items: center;
+}
+
+/* -- GAME CONTAINER (Main Layout) -- */
+.game-container {
+  background-color: #161b22; /* Slightly lighter dark for the app frame */
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  width: 100%; /* Occupy full width within its flex context */
+  max-width: 1200px; /* Max width to prevent overly wide on big screens */
+  min-height: 800px;
+  display: grid; /* Use CSS Grid for the internal layout */
+  grid-template-rows: auto auto 1fr; /* Header, Nav, Main Content */
+  overflow: hidden; /* Hide overflow */
+}
+
+/* -- HEADER -- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  background-color: #1f242c;
+  border-bottom: 1px solid #2d333b;
+}
+
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid #3b82f6;
+  object-fit: cover;
+  background-color: #b6e3f4;
+}
+
+.player-name {
+  margin: 0;
+  font-size: 1.4em;
+  color: #e6edf3;
+}
+
+.player-level {
+  font-size: 0.9em;
+  color: #8b949e;
+}
+
+.money-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.money-amount {
+  background-color: #2d333b;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  color: #d4af37; /* Gold color */
+  font-size: 1.1em;
+}
+
+/* -- NAVIGATION TABS -- */
+.nav-tabs {
+  display: flex;
+  background-color: #1f242c;
+  border-bottom: 1px solid #2d333b;
+}
+
+.nav-tab-button {
+  background: transparent;
+  border: none;
+  padding: 15px 25px;
+  color: #8b949e;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-bottom: 2px solid transparent; /* For active indicator */
+}
+
+.nav-tab-button:hover {
+  color: #e6edf3;
+  background-color: #2d333b;
+}
+
+.nav-tab-button.active {
+  color: #3b82f6; /* Blue for active tab */
+  border-bottom: 2px solid #3b82f6;
+  font-weight: bold;
+}
+
+/* -- MAIN CONTENT AREA -- */
+.main-content {
+  padding: 20px;
+  overflow-y: auto; /* Enable scrolling for content if it overflows */
+  display: flex; /* Make it a flex container for its children pages */
+  flex-direction: column;
+  gap: 20px; /* Space between sections */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+/* -- STATS GRID -- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.stat-card {
+  background-color: #21262d;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.stat-label {
+  font-size: 0.85em;
+  color: #8b949e;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #e6edf3;
+}
+
+.val-red { color: #f85149; } /* For attack/force */
+.val-blue { color: #58a6ff; } /* For energy */
+.val-gold { color: #d4af37; } /* For gold */
+
+/* -- PROGRESS BAR (Energy/XP) -- */
+.progress-bg {
+  background-color: #30363d;
+  border-radius: 5px;
+  height: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #58a6ff; /* Blue for energy */
+  border-radius: 5px;
+  width: 0%; /* Will be set dynamically */
+  transition: width 0.5s ease-out;
+}
+
+.progress-fill.xp {
+    background-color: #22c55e; /* Green for XP */
+}
+
+
+/* -- MESSAGE TOAST -- */
+.message-toast {
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  padding: 10px 15px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 20px;
+  color: #e6edf3;
+}
+
+/* -- ACTIONS GRID -- */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.combat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two big buttons */
+  gap: 15px;
+  margin-top: 15px;
+}
+
+
+/* -- BUTTONS -- */
+.btn {
+  background-color: #2ea44f; /* Green default */
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: #2c974b;
+}
+
+.btn:disabled {
+  background-color: #30363d;
+  color: #8b949e;
+  cursor: not-allowed;
+}
+
+.btn-blue { background-color: #0c63c2; }
+.btn-blue:hover:not(:disabled) { background-color: #0a58ad; }
+
+.btn-gold { background-color: #d4af37; }
+.btn-gold:hover:not(:disabled) { background-color: #c09a2a; }
+
+.btn-purple { background-color: #8957e5; }
+.btn-purple:hover:not(:disabled) { background-color: #7b4ac7; }
+
+.btn-danger { background-color: #c93d3d; }
+.btn-danger:hover:not(:disabled) { background-color: #b33636; }
+
+.btn-big {
+  padding: 20px;
+  font-size: 1.2em;
+}
+
+/* -- BATTLE LOG -- */
+.battle-log {
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: 'Consolas', monospace;
+  font-size: 0.9em;
+  color: #e6edf3;
+}
+
+.log-title {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 10px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.log-win { border-color: #238636; } /* Green border for win */
+.log-win .log-title { color: #238636; }
+
+.log-lose { border-color: #f85149; } /* Red border for lose */
+.log-lose .log-title { color: #f85149; }
+
+.log-line {
+  margin-bottom: 5px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+/* -- INVENTORY & ITEM CARD -- */
+.inventory-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #2d333b;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.inventory-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #e6edf3;
+  margin-bottom: 15px;
 }
 
-.card {
-  padding: 2em;
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Responsive grid for items */
+  gap: 15px;
+  padding: 10px 0;
 }
 
-.read-the-docs {
-  color: #888;
+.item-card {
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  position: relative;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.item-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.item-icon {
+  width: 100%;
+  height: 60px; /* Fixed height for icon area */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.item-img {
+  max-width: 80%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.item-name {
+  font-size: 0.8em;
+  font-weight: bold;
+  color: #e6edf3;
+  white-space: nowrap; /* Prevent name from wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add ellipsis */
+}
+
+.item-stats {
+  font-size: 0.7em;
+  color: #f85149; /* Red for bonus force */
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+/* Rarity colors */
+.rare-common { border-color: #8b949e; }
+.rare-rare { border-color: #58a6ff; } /* Blue */
+.rare-legendary { border-color: #d4af37; } /* Gold */
+.rare-unique { border-color: #f85149; } /* Red/Pink */
+
+
+/* --- RANKING PAGE STYLES --- */
+.ranking-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ranking-title {
+    text-align: center;
+    color: #d4af37; /* Gold */
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ranking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #21262d;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+}
+
+.ranking-item.player-highlight {
+    background-color: #3b82f640; /* Lighter blue for player */
+    border-color: #3b82f6;
+}
+
+.ranking-position {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #8b949e;
+    width: 40px;
+    text-align: center;
+}
+
+.ranking-name {
+    flex-grow: 1; /* Takes remaining space */
+    font-weight: bold;
+    color: #e6edf3;
+    font-size: 1.1em;
+}
+
+.ranking-force {
+    color: #f85149; /* Red for force */
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* Utility to ensure full-width page content */
+.game-content-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
