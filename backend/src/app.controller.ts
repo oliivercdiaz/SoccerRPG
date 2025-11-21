@@ -5,8 +5,15 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  // Esta es la puerta principal (localhost:3000)
   @Get()
-  getHello(): string {
+  getHello() {
     return this.appService.getHello();
+  }
+
+  // Esta es la puerta nueva que acabamos de construir (localhost:3000/entrenar)
+  @Get('entrenar')
+  realizarEntrenamiento() {
+    return this.appService.entrenar();
   }
 }
