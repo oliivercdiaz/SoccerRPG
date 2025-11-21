@@ -12,7 +12,9 @@ interface GamePageProps {
   botsGenerados: boolean;
   cargando: boolean;
   vista: 'club' | 'ranking';
+  layout: 'web' | 'steam' | 'compact';
   onVistaChange: (vista: 'club' | 'ranking') => void;
+  onLayoutChange: (layout: 'web' | 'steam' | 'compact') => void;
   onResponse: (respuesta: ServerResponse<any>) => Promise<void>;
   onRankingChange: (ranking: RankingEntry[]) => void;
   onBotsGenerados: () => void;
@@ -28,7 +30,9 @@ export const GamePage = ({
   botsGenerados,
   cargando,
   vista,
+  layout,
   onVistaChange,
+  onLayoutChange,
   onResponse,
   onRankingChange,
   onBotsGenerados,
@@ -143,14 +147,31 @@ export const GamePage = ({
   );
 
   return (
-    <div className="app">
+    <div className={`app theme-${layout}`}>
       <nav className="tabs">
-        <button className={`tab ${vista === 'club' ? 'activo' : ''}`} onClick={() => onVistaChange('club')}>
-          MI CLUB
-        </button>
-        <button className={`tab ${vista === 'ranking' ? 'activo' : ''}`} onClick={() => onVistaChange('ranking')}>
-          RANKING
-        </button>
+        <div className="tab-group">
+          <button className={`tab ${vista === 'club' ? 'activo' : ''}`} onClick={() => onVistaChange('club')}>
+            MI CLUB
+          </button>
+          <button className={`tab ${vista === 'ranking' ? 'activo' : ''}`} onClick={() => onVistaChange('ranking')}>
+            RANKING
+          </button>
+        </div>
+        <div className="layout-switcher" aria-label="Cambiar apariencia">
+          {[
+            { id: 'web', label: 'Web' },
+            { id: 'steam', label: 'Steam' },
+            { id: 'compact', label: 'Compacta' },
+          ].map((modo) => (
+            <button
+              key={modo.id}
+              className={`chip ${layout === modo.id ? 'activo' : ''}`}
+              onClick={() => onLayoutChange(modo.id as typeof layout)}
+            >
+              {modo.label}
+            </button>
+          ))}
+        </div>
       </nav>
 
       {vista === 'club' && (

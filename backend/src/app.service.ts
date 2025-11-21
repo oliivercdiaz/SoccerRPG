@@ -226,10 +226,11 @@ export class AppService {
     jugador.energia -= 25;
 
     const fuerzaJugador = this.calcularFuerzaTotal(jugador);
-    const boss = Math.floor(fuerzaJugador * 1.1 + 25);
+    const boss = Math.max(18, Math.floor(fuerzaJugador * 1.05 + 10));
     const suerte = Math.random();
     const modificadorJugador = 0.95 + Math.random() * 0.35;
-    const victoria = fuerzaJugador * modificadorJugador >= boss || suerte > 0.65;
+    const margen = fuerzaJugador * modificadorJugador - boss;
+    const victoria = margen >= -5 || suerte > 0.58;
 
     let mensaje = 'El boss te aplastó, toca reagruparse.';
     let recompensa = 0;
@@ -237,7 +238,7 @@ export class AppService {
     let resultadoCombate: 'Victoria' | 'Derrota' = 'Derrota';
 
     if (victoria) {
-      recompensa = 55 + Math.floor(Math.random() * 30);
+      recompensa = 40 + Math.floor(Math.random() * 20) + Math.floor(fuerzaJugador * 0.3);
       jugador.oro += recompensa;
       jugador.experiencia += 35;
       resultadoCombate = 'Victoria';
