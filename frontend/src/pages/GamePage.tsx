@@ -168,7 +168,7 @@ export const GamePage = ({
   );
 
   return (
-    <div className="app">
+    <div className="game-container">
       <header className="tabs">
         <div className="tab-group">
           <button className={`tab ${vista === 'club' ? 'activo' : ''}`} onClick={() => onVistaChange('club')}>
